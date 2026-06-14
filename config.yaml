@@ -1,0 +1,39 @@
+Connect:
+  connectNames: ["信标节点1", "信标节点2", "信标节点3", "信标节点4", "水下移动节点"] # 对应节点的名称
+  SendHeartBeat: true     #是否需要发送心跳包
+  Network1:
+    enable: true
+    addrs:                      # 公网对应节点的ip
+      - ["127.0.0.1", 12103]
+      - ["127.0.0.1", 12105]
+      - ["127.0.0.1", 12107]
+      - ["127.0.0.1", 12109]    # 暂未上线
+  Network2:
+    enable: true
+    addrs:                      # 电台对应节点的ip
+      - ["127.0.0.1", 12104]
+      - ["127.0.0.1", 12106]
+      - ["127.0.0.1", 12108]
+      - ["127.0.0.1", 12110]    # 暂未上线
+Location: # 定位算法报文接收端口
+  Network:
+    addrs:
+      - ["127.0.0.1", 12101]  #公网
+      - ["127.0.0.1", 12102]  #电台
+Login:
+  enableLog : true  # 是否启用日志
+  enableFilter: false  # enable ip filter
+  enableCurrentField: true # enable current field calculating procedure
+  userName: "root"  # 登录用户名
+Map:
+  deviceFrequence: ["low", "low", "low", "low", "normal"]
+  center: [120.123077, 30.263842] # 地图初始点
+  zoom: 8.5  # 地图初始放大倍数[2,20]
+  useConfig: true # 是否使用起始固定点
+  configPoints:     # 固定起始点
+    - [0, 0]
+    - [0, 0]
+    - [0, 0]
+    - [0, 0]
+    - [0, 0]
+

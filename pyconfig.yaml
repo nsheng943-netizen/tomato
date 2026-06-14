@@ -1,0 +1,65 @@
+# UDP 转发中间件配置
+heartbeat_interval: 5
+
+forward_rules:
+  # 规则1: 127.0.0.1:12101 监听转发
+  - listen_addr: [127.0.0.1, 12102]
+    forward_list:
+      - target_addr: [127.0.0.1, 13102]
+        enable_heartbeat: false
+        heartbeat_msg: ""
+      - target_addr: [122.224.168.178, 7010]
+        enable_heartbeat: true
+        heartbeat_msg: "HEARTBEATa"
+    listen_heartbeat:
+      enable: true
+      msg: "HEARTBEATb"
+   
+  - listen_addr: [127.0.0.1, 12104]
+    forward_list:
+      - target_addr: [127.0.0.1, 13104]
+        enable_heartbeat: false
+        heartbeat_msg: ""
+      - target_addr: [122.224.168.178, 7012]
+        enable_heartbeat: true
+        heartbeat_msg: "HEARTBEATa"
+    listen_heartbeat:
+      enable: true
+      msg: "HEARTBEATb"
+
+  - listen_addr: [127.0.0.1, 12106]
+    forward_list:
+      - target_addr: [127.0.0.1, 13106]
+        enable_heartbeat: false
+        heartbeat_msg: ""
+      - target_addr: [122.224.168.178, 7014]
+        enable_heartbeat: true
+        heartbeat_msg: "HEARTBEATa"
+    listen_heartbeat:
+      enable: true
+      msg: "HEARTBEATb"
+      
+  - listen_addr: [127.0.0.1, 12108]
+    forward_list:
+      - target_addr: [127.0.0.1, 13108]
+        enable_heartbeat: false
+        heartbeat_msg: ""
+      - target_addr: [122.224.168.178, 7016]
+        enable_heartbeat: true
+        heartbeat_msg: "HEARTBEATa"
+    listen_heartbeat:
+      enable: true
+      msg: "HEARTBEATb"
+      
+  - listen_addr: [127.0.0.1, 12110]
+    forward_list:
+      - target_addr: [127.0.0.1, 13110]
+        enable_heartbeat: false
+        heartbeat_msg: ""
+      - target_addr: [122.224.168.178, 7018]
+        enable_heartbeat: true
+        heartbeat_msg: "HEARTBEATa"
+    listen_heartbeat:
+      enable: true
+      msg: "HEARTBEATb"
+      
