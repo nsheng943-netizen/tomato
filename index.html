@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>番茄钟</title>
+<style>
+  :root {
+    --focus:   #e07b5a;
+    --focus-light: #f5c6b3;
+    --break:   #5a9e7c;
+    --break-light: #b3d9c7;
+    --bg-from: #f0f4f8;
+    --bg-to:   #e2e8f0;
+    --card:    rgba(255,255,255,0.85);
+    --text:    #2d3748;
+    --text-light: #718096;
+    --shadow:  0 2px 16px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+    --radius:  24px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--bg-from) 0%, var(--bg-to) 100%);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ============ 主卡片 ============ */
+  .card {
+    background: var(--card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 48px 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    transition: box-shadow 0.4s;
+  }
+  .card:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+  }
+
+  /* ============ 状态标签 ============ */
+  .state-badge {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 20px;
+    border-radius: 99px;
+    transition: background 0.4s, color 0.4s;
+  }
+  .state-badge.focus {
+    background: var(--focus-light);
+    color: var(--focus);
+  }
+  .state-badge.break {
+    background: var(--break-light);
+    color: var(--break);
+  }
+
+  /* ============ 进度环容器 ============ */
+  .ring-container {
+    position: relative;
+    width: 260px;
+    height: 260px;
+  }
+  .ring-container svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+  }
+  .ring-bg {
+    fill: none;
+    stroke: #e8ecf1;
+    stroke-width: 10;
+  }
+  .ring-fg {
+    fill: none;
+    stroke-width: 10;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.9s linear, stroke 0.4s;
+  }
+  .ring-fg.focus { stroke: var(--focus); }
+  .ring-fg.break { stroke: var(--break); }
+
+  /* 中央时间显示 */
+  .time-display {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  .time-text {
+    font-size: 56px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    line-height: 1;
+  }
+  .time-hint {
+    font-size: 13px;
+    color: var(--text-light);
+    letter-spacing: 0.04em;
+  }
+
+  /* ============ 按钮组 ============ */
+  .btn-row {
+    display: flex;
+    gap: 14px;
+  }
+  button {
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 28px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    outline: none;
+  }
+  button:active {
+    transform: scale(0.96);
+  }
+
+  .btn-primary {
+    background: var(--focus);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(224,123,90,0.35);
+  }
+  .btn-primary:hover  { background: #d46f4e; }
+  .btn-primary.paused { background: var(--break); box-shadow: 0 4px 14px rgba(90,158,124,0.35); }
+  .btn-primary.paused:hover { background: #4e8d70; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-light);
+    padding: 12px 20px;
+  }
+  .btn-ghost:hover {
+    background: rgba(0,0,0,0.05);
+    color: var(--text);
+  }
+
+  /* ============ 完成计数 ============ */
+  .done-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-light);
+    letter-spacing: 0.02em;
+  }
+  .done-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--focus);
+    display: inline-block;
+    margin: 0 1px;
+    opacity: 0.35;
+    transition: opacity 0.3s;
+  }
+  .done-dot.filled { opacity: 1; }
+
+  /* ============ 响应式 ============ */
+  @media (max-width: 480px) {
+    .card         { padding: 36px 28px; gap: 22px; }
+    .ring-container { width: 200px; height: 200px; }
+    .time-text    { font-size: 42px; }
+    .btn-row      { gap: 8px; }
+    button        { padding: 10px 18px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <!-- 状态标签 -->
+  <div class="state-badge focus" id="stateBadge">专注</div>
+
+  <!-- 进度环 + 时间 -->
+  <div class="ring-container">
+    <svg viewBox="0 0 100 100">
+      <circle class="ring-bg" cx="50" cy="50" r="44"/>
+      <circle class="ring-fg focus" id="ringFg" cx="50" cy="50" r="44"
+              stroke-dasharray="276.46" stroke-dashoffset="0"/>
+    </svg>
+    <div class="time-display">
+      <span class="time-text" id="timeText">25:00</span>
+      <span class="time-hint" id="timeHint">分钟</span>
+    </div>
+  </div>
+
+  <!-- 按钮 -->
+  <div class="btn-row">
+    <button class="btn-ghost" id="btnReset" title="重置">重置</button>
+    <button class="btn-primary" id="btnToggle">开始</button>
+    <button class="btn-ghost" id="btnSkip" title="跳过">跳过</button>
+  </div>
+
+  <!-- 完成番茄数 -->
+  <div class="done-row">
+    <span>今日完成</span>
+    <span id="doneDots"></span>
+    <span id="doneCount">0</span>
+    <span>个番茄</span>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   番茄钟 - Pomodoro Timer
+   ================================================================ */
+
+const SETTINGS = {
+  focus: 25 * 60,   // 专注时长（秒）
+  break:  5 * 60,   // 休息时长（秒）
+};
+
+const CIRCUMFERENCE = 2 * Math.PI * 44; // r=44 → ≈ 276.46
+
+// ---- DOM 引用 ----
+const el = {
+  badge:    document.getElementById('stateBadge'),
+  ringFg:   document.getElementById('ringFg'),
+  timeText: document.getElementById('timeText'),
+  timeHint: document.getElementById('timeHint'),
+  btnToggle:document.getElementById('btnToggle'),
+  btnReset: document.getElementById('btnReset'),
+  btnSkip:  document.getElementById('btnSkip'),
+  doneDots: document.getElementById('doneDots'),
+  doneCount:document.getElementById('doneCount'),
+};
+
+// ---- 状态 ----
+let state     = 'focus';       // 'focus' | 'break'
+let timeLeft  = SETTINGS.focus;
+let totalTime = SETTINGS.focus;
+let isRunning = false;
+let timerId   = null;
+let pomodoroCount = 0;
+
+// ---- 音频上下文（延迟初始化）----
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+// ---- 播放提示音 ----
+function playSound() {
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+
+    // 三声短促的提示音，频率递增
+    [660, 880, 1100].forEach((freq, i) => {
+      const t = now + i * 0.18;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.25, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.22);
+    });
+  } catch (_) {
+    // 静默忽略音频错误
+  }
+}
+
+// ---- 格式化时间 ----
+function fmt(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+// ---- 更新进度环 ----
+function updateRing() {
+  const pct = timeLeft / totalTime;
+  const offset = CIRCUMFERENCE * (1 - pct);
+  el.ringFg.style.strokeDashoffset = offset;
+}
+
+// ---- 更新 UI ----
+function updateUI() {
+  el.timeText.textContent = fmt(timeLeft);
+  updateRing();
+
+  // 页面标题
+  const label = state === 'focus' ? '专注' : '休息';
+  document.title = `${fmt(timeLeft)} - ${label} · 番茄钟`;
+}
+
+// ---- 切换状态（focus ↔ break）----
+function switchState() {
+  state = (state === 'focus') ? 'break' : 'focus';
+
+  if (state === 'focus') {
+    totalTime = SETTINGS.focus;
+    timeLeft  = SETTINGS.focus;
+    el.badge.textContent = '专注';
+    el.badge.className   = 'state-badge focus';
+    el.ringFg.className  = 'ring-fg focus';
+    el.timeHint.textContent = '分钟';
+    el.btnToggle.classList.remove('paused');
+  } else {
+    totalTime = SETTINGS.break;
+    timeLeft  = SETTINGS.break;
+    el.badge.textContent = '休息';
+    el.badge.className   = 'state-badge break';
+    el.ringFg.className  = 'ring-fg break';
+    el.timeHint.textContent = '分钟';
+    el.btnToggle.classList.add('paused');
+    pomodoroCount++;
+    updateDots();
+  }
+
+  updateUI();
+}
+
+// ---- 完成圆点 ----
+function updateDots() {
+  const max = Math.min(pomodoroCount, 8);
+  let html = '';
+  for (let i = 0; i < max; i++) {
+    html += '<span class="done-dot filled"></span>';
+  }
+  el.doneDots.innerHTML = html;
+  el.doneCount.textContent = pomodoroCount;
+}
+
+// ---- 计时 tick ----
+function tick() {
+  if (!isRunning) return;
+
+  timeLeft--;
+
+  if (timeLeft <= 0) {
+    // 计时结束
+    stopTimer();
+    playSound();
+    switchState();
+    // 自动开始下一阶段
+    startTimer();
+  }
+
+  updateUI();
+}
+
+// ---- 开始计时 ----
+function startTimer() {
+  if (isRunning) return;
+  isRunning = true;
+  timerId = setInterval(tick, 1000);
+
+  el.btnToggle.textContent = '暂停';
+  el.btnToggle.classList.add('paused');
+}
+
+// ---- 停止计时 ----
+function stopTimer() {
+  isRunning = false;
+  if (timerId) {
+    clearInterval(timerId);
+    timerId = null;
+  }
+  el.btnToggle.textContent = '开始';
+  el.btnToggle.classList.remove('paused');
+}
+
+// ---- 重置 ----
+function reset() {
+  stopTimer();
+  timeLeft = totalTime;
+  updateUI();
+}
+
+// ---- 跳过当前阶段 ----
+function skip() {
+  stopTimer();
+  playSound();
+  switchState();
+  // 自动开始下一阶段
+  startTimer();
+}
+
+// ---- 事件绑定 ----
+el.btnToggle.addEventListener('click', () => {
+  if (isRunning) {
+    stopTimer();
+  } else {
+    startTimer();
+  }
+});
+
+el.btnReset.addEventListener('click', reset);
+el.btnSkip.addEventListener('click', skip);
+
+// ---- 键盘快捷键 ----
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'BUTTON') return; // 焦点在按钮时不处理
+  switch (e.code) {
+    case 'Space':  e.preventDefault(); el.btnToggle.click(); break;
+    case 'KeyR':   el.btnReset.click();  break;
+    case 'KeyS':   el.btnSkip.click();   break;
+    default: break;
+  }
+});
+
+// ---- 初始化 ----
+updateUI();
+</script>
+
+</body>
+</html>
